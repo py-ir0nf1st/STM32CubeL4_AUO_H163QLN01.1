@@ -24,6 +24,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#define DISPLAY_DRIVER_RM69032
+
 /** @addtogroup STM32L4xx_HAL_Examples
   * @{
   */
@@ -387,6 +389,107 @@ static uint8_t LCD_Config(void)
   /*************************/
   /* LCD POWER ON SEQUENCE */
   /*************************/
+#if defined(DISPLAY_DRIVER_RM69032)
+
+#define INIT_OP_DELAY 0xFFFFFFFF
+
+typedef struct {
+  uint32_t hdr_type;
+  uint32_t delay_time;
+  uint8_t cmd;
+  uint8_t payload_size;
+  uint8_t payload[10];
+} INIT_OP;
+
+const INIT_OP rm69032_init_ops[] = {
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x00}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBD, .payload_size = 5, .payload = {0x03, 0x20, 0x14, 0x4B, 0x00}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBE, .payload_size = 5, .payload = {0x03, 0x20, 0x14, 0x4B, 0x01}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBF, .payload_size = 5, .payload = {0x03, 0x20, 0x14, 0x4B, 0x00}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBB, .payload_size = 3, .payload = {0x07, 0x07, 0x07}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xC7, .payload_size = 1, .payload = {0x40}},
+
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x02}},
+  {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0xEB, .payload_size = 1, .payload = {0x02}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xFE, .payload_size = 2, .payload = {0x08, 0x50}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xC3, .payload_size = 3, .payload = {0xF2, 0x95, 0x04}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xE9, .payload_size = 3, .payload = {0x00, 0x36, 0x38}},
+  {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0xCA, .payload_size = 1, .payload = {0x04}},
+
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x01}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB0, .payload_size = 3, .payload = {0x03, 0x03, 0x03}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB1, .payload_size = 3, .payload = {0x05, 0x05, 0x05}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB2, .payload_size = 3, .payload = {0x01, 0x01, 0x01}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB4, .payload_size = 3, .payload = {0x07, 0x07, 0x07}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB5, .payload_size = 3, .payload = {0x03, 0x03, 0x03}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB6, .payload_size = 3, .payload = {0x55, 0x55, 0x55}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB7, .payload_size = 3, .payload = {0x36, 0x36, 0x36}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB8, .payload_size = 3, .payload = {0x23, 0x23, 0x23}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB9, .payload_size = 3, .payload = {0x03, 0x03, 0x03}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBA, .payload_size = 3, .payload = {0x03, 0x03, 0x03}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBE, .payload_size = 3, .payload = {0x32, 0x30, 0x70}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xCF, .payload_size = 7, .payload = {0xFF, 0xD4, 0x95, 0xE8, 0x4F, 0x00, 0x04}},
+  {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0x35, .payload_size = 1, .payload = {0x01}},
+  {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0x36, .payload_size = 1, .payload = {0x00}},
+  {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0xC0, .payload_size = 1, .payload = {0x20}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xC2, .payload_size = 6, .payload = {0x17, 0x17, 0x17, 0x17, 0x17, 0x0B}},
+  //{.hdr_type = 0x32},
+
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x02}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xFF, 0x13, 0x08, 0x30, 0x0C, 0x00}},
+
+  {.hdr_type = INIT_OP_DELAY, .delay_time = 20},
+
+  {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P0,	.cmd = 0x11, .payload_size = 0},
+
+  {.hdr_type = INIT_OP_DELAY, .delay_time = 300},
+
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x02}},
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xFE, 0x13, 0x08, 0x30, 0x0C, 0x00}},
+
+  {.hdr_type = INIT_OP_DELAY, .delay_time = 20},
+
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xE6, 0x13, 0x08, 0x30, 0x0C, 0x00}},
+
+  {.hdr_type = INIT_OP_DELAY, .delay_time = 20},
+
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xE2, 0x13, 0x08, 0x30, 0x0C, 0x00}},
+
+  {.hdr_type = INIT_OP_DELAY, .delay_time = 20},
+
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xE0, 0x13, 0x08, 0x30, 0x0C, 0x00}},
+
+  {.hdr_type = INIT_OP_DELAY, .delay_time = 20},
+
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xE0, 0x13, 0x08, 0x00, 0x0C, 0x00}},
+
+  {.hdr_type = INIT_OP_DELAY, .delay_time = 20},
+
+  {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P0,	.cmd = 0x29, .payload_size = 0},
+
+  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x00}}
+};
+
+  for (int i = 0; i < sizeof(rm69032_init_ops) / sizeof(INIT_OP); i ++) {
+    const INIT_OP *op = &rm69032_init_ops[i];
+    switch (op->hdr_type) {
+    case DSI_DCS_SHORT_PKT_WRITE_P0:
+      HAL_DSI_ShortWrite(&DsiHandle, 0, op->hdr_type, op->cmd, 0);
+      break;
+    case DSI_DCS_SHORT_PKT_WRITE_P1:
+      HAL_DSI_ShortWrite(&DsiHandle, 0, op->hdr_type, op->cmd, op->payload[0]);
+      break;
+    case DSI_DCS_LONG_PKT_WRITE:
+      HAL_DSI_LongWrite(&DsiHandle, 0, op->hdr_type, op->payload_size, op->cmd, (uint8_t *)op->payload);
+      break;
+    case INIT_OP_DELAY:
+    HAL_Delay(op->delay_time);
+      break;
+    default:
+      break;
+    }
+  }
+#else
   /* Step 1 */
   /* Go to command 2 */
   HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0xFE, 0x01);
@@ -566,6 +669,7 @@ static uint8_t LCD_Config(void)
   {
     return(LCD_ERROR);
   }
+#endif
 
   /* Enable DSI Wrapper */
   __HAL_DSI_WRAPPER_ENABLE(&DsiHandle);
