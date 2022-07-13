@@ -480,7 +480,11 @@ const INIT_OP rm69032_init_ops[] = {
       HAL_DSI_ShortWrite(&DsiHandle, 0, op->hdr_type, op->cmd, op->payload[0]);
       break;
     case DSI_DCS_LONG_PKT_WRITE:
+<<<<<<< HEAD
       HAL_DSI_LongWrite(&DsiHandle, 0, op->hdr_type, op->payload_size, op->cmd, (uint8_t *)op->payload);
+=======
+      HAL_DSI_LongWrite(&DsiHandle, 0, op->hdr_type, op->payload_size, op->cmd, op->payload);
+>>>>>>> 937ccb96cebbc7f3b3d2b93a59598b584e46347e
       break;
     case INIT_OP_DELAY:
     HAL_Delay(op->delay_time);
