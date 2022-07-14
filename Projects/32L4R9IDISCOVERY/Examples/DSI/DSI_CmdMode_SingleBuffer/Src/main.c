@@ -24,6 +24,24 @@
 #include <string.h>
 #include <stdio.h>
 
+/*
+ * @Harvey Zhang
+ *
+ * The original example is optimized for 390*390 round display with display controller RM67162.
+ *
+ * As pixels outside of the circle will never be displayed,
+ * those pixel data don't have to be stored in the frame buffer nor have to be transfer to the display controller.
+ * So it needs about 20% less buffer when using the round display.
+ * It's done with the help of gfxmmu.
+ *
+ * In our case, we are using a 320*320 square display with display controller RM69032.
+ * There are several modifications required.
+ * 1. We will need a full size frame buffer. The size is 320 * 320 * 3 / 4 = 76800 words.
+ * 2. The gfxmmu has to be configured to display 320*320 square image.
+ * 3. The display controller initialization code has to be changed according to RM69032.
+ * 4. The image data in image_390x390_rgb888.h has to be trimmed to be displayed on a 320*320 display.
+ *    Here I choose to only display the up left corner.
+ */
 #define DISPLAY_DRIVER_RM69032
 
 /** @addtogroup STM32L4xx_HAL_Examples
@@ -35,6 +53,16 @@
   */
 
 /* Physical frame buffer for background and foreground layers */
+#if defined (DISPLAY_DRIVER_RM69032)
+#if defined ( __ICCARM__ )  /* IAR Compiler */
+  #pragma data_alignment = 16
+uint32_t              PhysFrameBuffer[76800];
+#elif defined (__GNUC__)    /* GNU Compiler */
+uint32_t              PhysFrameBuffer[76800] __attribute__ ((aligned (16)));
+#else                       /* ARM Compiler */
+__align(16) uint32_t  PhysFrameBuffer[76800];
+#endif
+#else
 /* 390*390 pixels with 24bpp - 20% (with GFXMMU) */
 #if defined ( __ICCARM__ )  /* IAR Compiler */
   #pragma data_alignment = 16
@@ -43,6 +71,7 @@ uint32_t              PhysFrameBuffer[91260];
 uint32_t              PhysFrameBuffer[91260] __attribute__ ((aligned (16)));
 #else                       /* ARM Compiler */
 __align(16) uint32_t  PhysFrameBuffer[91260];
+#endif
 #endif
 
 /* GFXMMU, LTDC and DSI handles */
@@ -56,11 +85,11 @@ LTDC_HandleTypeDef   LtdcHandle;
 #define VSYNC               1
 #define VBP                 1
 #define VFP                 1
-#define VACT                390
+#define VACT                320
 #define HSYNC               1
 #define HBP                 1
 #define HFP                 1
-#define HACT                390
+#define HACT                320
 
 #define LAYER_ADDRESS       GFXMMU_VIRTUAL_BUFFER0_BASE
 
@@ -83,6 +112,18 @@ static void CopyInVirtualBuffer(uint32_t *pSrc,
                                 uint16_t ysize);
 static uint8_t LCD_Config(void);
 static void LCD_PowerOn(void);
+
+static void image_data_crop(const uint8_t *src, uint32_t src_width, uint32_t src_height, uint8_t *dst, uint32_t dst_width, uint32_t dst_height, uint8_t bytes_per_pixel) {
+  if (dst_width > src_width || dst_height > src_height) {
+    return;
+  }
+
+  for (uint32_t y = 0; y < dst_height; y ++) {
+    for (uint32_t x = 0; x < dst_width; x ++) {
+      memcpy(dst + dst_width * y, src + src_width * y, dst_width * bytes_per_pixel);
+    }
+  }
+}
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -130,8 +171,10 @@ int main(void)
     Error_Handler();
   }
 
+  uint8_t image_320x320_rgb888[320*320*3];
+  image_data_crop(image_390x390_rgb888, 390, 390, image_320x320_rgb888, 320, 320, 3);
   /*Draw image in GFXMMU (Chome-GRC) Virtual buffer*/
-  CopyInVirtualBuffer((uint32_t *)image_390x390_rgb888, (uint32_t *)LAYER_ADDRESS, 0, 0, 390, 390);
+  CopyInVirtualBuffer((uint32_t *)image_320x320_rgb888, (uint32_t *)LAYER_ADDRESS, 0, 0, 320, 320);
   pending_buffer = 1;
 
   /*Refresh the LCD display*/
@@ -234,12 +277,12 @@ static uint8_t LCD_Config(void)
   }
 
   /* Initialize LUT */
-  if(HAL_OK != HAL_GFXMMU_ConfigLut(&GfxmmuHandle, 0, 390, (uint32_t) gfxmmu_lut_config_rgb888))
+  if(HAL_OK != HAL_GFXMMU_ConfigLut(&GfxmmuHandle, 0, 320, (uint32_t) gfxmmu_lut_config_rgb888))
   {
     return(LCD_ERROR);
   }
   /* Disable non visible lines : from line 390 to 1023 (634 lines) */
-  if(HAL_OK != HAL_GFXMMU_DisableLutLines(&GfxmmuHandle, 390, 634))
+  if(HAL_OK != HAL_GFXMMU_DisableLutLines(&GfxmmuHandle, 320, 704))
   {
     return(LCD_ERROR);
   }
@@ -259,10 +302,10 @@ static uint8_t LCD_Config(void)
   LtdcHandle.Init.VerticalSync       = 0;   /* VSYNC width - 1 */
   LtdcHandle.Init.AccumulatedHBP     = 1;   /* HSYNC width + HBP - 1 */
   LtdcHandle.Init.AccumulatedVBP     = 1;   /* VSYNC width + VBP - 1 */
-  LtdcHandle.Init.AccumulatedActiveW = 391; /* HSYNC width + HBP + Active width - 1 */
-  LtdcHandle.Init.AccumulatedActiveH = 391; /* VSYNC width + VBP + Active height - 1 */
-  LtdcHandle.Init.TotalWidth         = 392; /* HSYNC width + HBP + Active width + HFP - 1 */
-  LtdcHandle.Init.TotalHeigh         = 392; /* VSYNC width + VBP + Active height + VFP - 1 */
+  LtdcHandle.Init.AccumulatedActiveW = 321; /* HSYNC width + HBP + Active width - 1 */
+  LtdcHandle.Init.AccumulatedActiveH = 321; /* VSYNC width + VBP + Active height - 1 */
+  LtdcHandle.Init.TotalWidth         = 322; /* HSYNC width + HBP + Active width + HFP - 1 */
+  LtdcHandle.Init.TotalHeigh         = 322; /* VSYNC width + VBP + Active height + VFP - 1 */
   LtdcHandle.Init.Backcolor.Red      = 0;   /* Not used default value */
   LtdcHandle.Init.Backcolor.Green    = 0;   /* Not used default value */
   LtdcHandle.Init.Backcolor.Blue     = 0;   /* Not used default value */
@@ -274,9 +317,9 @@ static uint8_t LCD_Config(void)
 
   /* LTDC layer 1 configuration */
   LayerCfg.WindowX0        = 0;
-  LayerCfg.WindowX1        = 390;
+  LayerCfg.WindowX1        = 320;
   LayerCfg.WindowY0        = 0;
-  LayerCfg.WindowY1        = 390;
+  LayerCfg.WindowY1        = 320;
   LayerCfg.PixelFormat     = LTDC_PIXEL_FORMAT_RGB888;
   LayerCfg.Alpha           = 0xFF; /* NU default value */
   LayerCfg.Alpha0          = 0; /* NU default value */
@@ -285,7 +328,7 @@ static uint8_t LCD_Config(void)
   LayerCfg.FBStartAdress   = LAYER_ADDRESS;
   LayerCfg.ImageWidth      = 1024; /* virtual frame buffer contains 768 pixels per line for 24bpp */
                                    /* (192 blocks * 16) / (24bpp/3) = 1024 pixels per ligne        */
-  LayerCfg.ImageHeight     = 390;
+  LayerCfg.ImageHeight     = 320;
   LayerCfg.Backcolor.Red   = 0; /* Not Used: default value */
   LayerCfg.Backcolor.Green = 0; /* Not Used: default value */
   LayerCfg.Backcolor.Blue  = 0; /* Not Used: default value */
@@ -361,7 +404,7 @@ static uint8_t LCD_Config(void)
 
   CmdCfg.VirtualChannelID      = 0;
   CmdCfg.ColorCoding           = DSI_RGB888;
-  CmdCfg.CommandSize           = 390;
+  CmdCfg.CommandSize           = 320;
   CmdCfg.TearingEffectSource   = DSI_TE_DSILINK;
   CmdCfg.TearingEffectPolarity = DSI_TE_FALLING_EDGE;
   CmdCfg.HSPolarity            = DSI_HSYNC_ACTIVE_LOW;
@@ -393,100 +436,100 @@ static uint8_t LCD_Config(void)
 
 #define INIT_OP_DELAY 0xFFFFFFFF
 
-typedef struct {
-  uint32_t hdr_type;
-  uint32_t delay_time;
-  uint8_t cmd;
-  uint8_t payload_size;
-  uint8_t payload[10];
-} INIT_OP;
+  typedef struct {
+    uint32_t hdr_type;
+    uint32_t delay_time;
+    uint8_t cmd;
+    uint8_t payload_size;
+    uint8_t payload[10];
+  } INIT_OP;
 
-const INIT_OP rm69032_init_ops[] = {
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x00}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBD, .payload_size = 5, .payload = {0x03, 0x20, 0x14, 0x4B, 0x00}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBE, .payload_size = 5, .payload = {0x03, 0x20, 0x14, 0x4B, 0x01}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBF, .payload_size = 5, .payload = {0x03, 0x20, 0x14, 0x4B, 0x00}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBB, .payload_size = 3, .payload = {0x07, 0x07, 0x07}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xC7, .payload_size = 1, .payload = {0x40}},
+  const INIT_OP rm69032_init_ops[] = {
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x00}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBD, .payload_size = 5, .payload = {0x03, 0x20, 0x14, 0x4B, 0x00}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBE, .payload_size = 5, .payload = {0x03, 0x20, 0x14, 0x4B, 0x01}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBF, .payload_size = 5, .payload = {0x03, 0x20, 0x14, 0x4B, 0x00}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBB, .payload_size = 3, .payload = {0x07, 0x07, 0x07}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xC7, .payload_size = 1, .payload = {0x40}},
 
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x02}},
-  {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0xEB, .payload_size = 1, .payload = {0x02}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xFE, .payload_size = 2, .payload = {0x08, 0x50}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xC3, .payload_size = 3, .payload = {0xF2, 0x95, 0x04}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xE9, .payload_size = 3, .payload = {0x00, 0x36, 0x38}},
-  {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0xCA, .payload_size = 1, .payload = {0x04}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x02}},
+    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0xEB, .payload_size = 1, .payload = {0x02}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xFE, .payload_size = 2, .payload = {0x08, 0x50}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xC3, .payload_size = 3, .payload = {0xF2, 0x95, 0x04}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xE9, .payload_size = 3, .payload = {0x00, 0x36, 0x38}},
+    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0xCA, .payload_size = 1, .payload = {0x04}},
 
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x01}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB0, .payload_size = 3, .payload = {0x03, 0x03, 0x03}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB1, .payload_size = 3, .payload = {0x05, 0x05, 0x05}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB2, .payload_size = 3, .payload = {0x01, 0x01, 0x01}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB4, .payload_size = 3, .payload = {0x07, 0x07, 0x07}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB5, .payload_size = 3, .payload = {0x03, 0x03, 0x03}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB6, .payload_size = 3, .payload = {0x55, 0x55, 0x55}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB7, .payload_size = 3, .payload = {0x36, 0x36, 0x36}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB8, .payload_size = 3, .payload = {0x23, 0x23, 0x23}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB9, .payload_size = 3, .payload = {0x03, 0x03, 0x03}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBA, .payload_size = 3, .payload = {0x03, 0x03, 0x03}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBE, .payload_size = 3, .payload = {0x32, 0x30, 0x70}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xCF, .payload_size = 7, .payload = {0xFF, 0xD4, 0x95, 0xE8, 0x4F, 0x00, 0x04}},
-  {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0x35, .payload_size = 1, .payload = {0x01}},
-  {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0x36, .payload_size = 1, .payload = {0x00}},
-  {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0xC0, .payload_size = 1, .payload = {0x20}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xC2, .payload_size = 6, .payload = {0x17, 0x17, 0x17, 0x17, 0x17, 0x0B}},
-  //{.hdr_type = 0x32},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x01}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB0, .payload_size = 3, .payload = {0x03, 0x03, 0x03}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB1, .payload_size = 3, .payload = {0x05, 0x05, 0x05}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB2, .payload_size = 3, .payload = {0x01, 0x01, 0x01}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB4, .payload_size = 3, .payload = {0x07, 0x07, 0x07}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB5, .payload_size = 3, .payload = {0x03, 0x03, 0x03}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB6, .payload_size = 3, .payload = {0x55, 0x55, 0x55}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB7, .payload_size = 3, .payload = {0x36, 0x36, 0x36}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB8, .payload_size = 3, .payload = {0x23, 0x23, 0x23}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xB9, .payload_size = 3, .payload = {0x03, 0x03, 0x03}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBA, .payload_size = 3, .payload = {0x03, 0x03, 0x03}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBE, .payload_size = 3, .payload = {0x32, 0x30, 0x70}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xCF, .payload_size = 7, .payload = {0xFF, 0xD4, 0x95, 0xE8, 0x4F, 0x00, 0x04}},
+    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0x35, .payload_size = 1, .payload = {0x01}},
+    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0x36, .payload_size = 1, .payload = {0x00}},
+    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0xC0, .payload_size = 1, .payload = {0x20}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xC2, .payload_size = 6, .payload = {0x17, 0x17, 0x17, 0x17, 0x17, 0x0B}},
+    //{.hdr_type = 0x32},
 
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x02}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xFF, 0x13, 0x08, 0x30, 0x0C, 0x00}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x02}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xFF, 0x13, 0x08, 0x30, 0x0C, 0x00}},
 
-  {.hdr_type = INIT_OP_DELAY, .delay_time = 20},
+    {.hdr_type = INIT_OP_DELAY, .delay_time = 20},
 
-  {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P0,	.cmd = 0x11, .payload_size = 0},
+    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P0,	.cmd = 0x11, .payload_size = 0},
 
-  {.hdr_type = INIT_OP_DELAY, .delay_time = 300},
+    {.hdr_type = INIT_OP_DELAY, .delay_time = 300},
 
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x02}},
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xFE, 0x13, 0x08, 0x30, 0x0C, 0x00}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x02}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xFE, 0x13, 0x08, 0x30, 0x0C, 0x00}},
 
-  {.hdr_type = INIT_OP_DELAY, .delay_time = 20},
+    {.hdr_type = INIT_OP_DELAY, .delay_time = 20},
 
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xE6, 0x13, 0x08, 0x30, 0x0C, 0x00}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xE6, 0x13, 0x08, 0x30, 0x0C, 0x00}},
 
-  {.hdr_type = INIT_OP_DELAY, .delay_time = 20},
+    {.hdr_type = INIT_OP_DELAY, .delay_time = 20},
 
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xE2, 0x13, 0x08, 0x30, 0x0C, 0x00}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xE2, 0x13, 0x08, 0x30, 0x0C, 0x00}},
 
-  {.hdr_type = INIT_OP_DELAY, .delay_time = 20},
+    {.hdr_type = INIT_OP_DELAY, .delay_time = 20},
 
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xE0, 0x13, 0x08, 0x30, 0x0C, 0x00}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xE0, 0x13, 0x08, 0x30, 0x0C, 0x00}},
 
-  {.hdr_type = INIT_OP_DELAY, .delay_time = 20},
+    {.hdr_type = INIT_OP_DELAY, .delay_time = 20},
 
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xE0, 0x13, 0x08, 0x00, 0x0C, 0x00}},
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xE0, 0x13, 0x08, 0x00, 0x0C, 0x00}},
 
-  {.hdr_type = INIT_OP_DELAY, .delay_time = 20},
+    {.hdr_type = INIT_OP_DELAY, .delay_time = 20},
 
-  {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P0,	.cmd = 0x29, .payload_size = 0},
+    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P0,	.cmd = 0x29, .payload_size = 0},
 
-  {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x00}}
-};
+    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x00}}
+  };
 
   for (int i = 0; i < sizeof(rm69032_init_ops) / sizeof(INIT_OP); i ++) {
     const INIT_OP *op = &rm69032_init_ops[i];
     switch (op->hdr_type) {
-    case DSI_DCS_SHORT_PKT_WRITE_P0:
-      HAL_DSI_ShortWrite(&DsiHandle, 0, op->hdr_type, op->cmd, 0);
-      break;
-    case DSI_DCS_SHORT_PKT_WRITE_P1:
-      HAL_DSI_ShortWrite(&DsiHandle, 0, op->hdr_type, op->cmd, op->payload[0]);
-      break;
-    case DSI_DCS_LONG_PKT_WRITE:
-      HAL_DSI_LongWrite(&DsiHandle, 0, op->hdr_type, op->payload_size, op->cmd, (uint8_t *)op->payload);
-      break;
-    case INIT_OP_DELAY:
-    HAL_Delay(op->delay_time);
-      break;
-    default:
-      break;
+      case DSI_DCS_SHORT_PKT_WRITE_P0:
+        HAL_DSI_ShortWrite(&DsiHandle, 0, op->hdr_type, op->cmd, 0);
+        break;
+      case DSI_DCS_SHORT_PKT_WRITE_P1:
+        HAL_DSI_ShortWrite(&DsiHandle, 0, op->hdr_type, op->cmd, op->payload[0]);
+        break;
+      case DSI_DCS_LONG_PKT_WRITE:
+        HAL_DSI_LongWrite(&DsiHandle, 0, op->hdr_type, op->payload_size, op->cmd, (uint8_t *)op->payload);
+        break;
+      case INIT_OP_DELAY:
+        HAL_Delay(op->delay_time);
+        break;
+      default:
+        break;
     }
   }
 #else
@@ -722,6 +765,45 @@ static void LCD_PowerOn(void)
   * @param  ColorMode: Input color mode
   * @retval None
   */
+#if 1
+static void CopyInVirtualBuffer(uint32_t *pSrc, uint32_t *pDst, uint16_t x, uint16_t y, uint16_t xsize, uint16_t ysize)
+{
+  uint32_t destination = (uint32_t)pDst + (y * 320 + x) * 4;
+  uint32_t source      = (uint32_t)pSrc;
+
+  Dma2dHandle.Instance          = DMA2D;
+
+  /*##-1- Configure the DMA2D Mode, Color Mode and output offset #############*/
+  Dma2dHandle.Init.Mode           = DMA2D_M2M_PFC;
+  Dma2dHandle.Init.ColorMode      = DMA2D_OUTPUT_RGB888;
+  Dma2dHandle.Init.OutputOffset   = 1024 - 320;
+  Dma2dHandle.Init.AlphaInverted  = DMA2D_REGULAR_ALPHA;  /* No Output Alpha Inversion */
+  Dma2dHandle.Init.RedBlueSwap    = DMA2D_RB_REGULAR;     /* No Output Red & Blue swap */
+  Dma2dHandle.Init.BytesSwap      = DMA2D_BYTES_REGULAR;  /* Regular output byte order */
+  Dma2dHandle.Init.LineOffsetMode = DMA2D_LOM_PIXELS;     /* Pixel mode                */
+
+  /*##-2- Foreground Configuration ###########################################*/
+  Dma2dHandle.LayerCfg[1].InputColorMode = DMA2D_INPUT_RGB888;
+  Dma2dHandle.LayerCfg[1].InputOffset    = 0;
+  Dma2dHandle.LayerCfg[1].AlphaMode      = DMA2D_NO_MODIF_ALPHA;
+  Dma2dHandle.LayerCfg[1].InputAlpha     = 0xFF;                /* Not used */
+  Dma2dHandle.LayerCfg[1].RedBlueSwap    = DMA2D_RB_SWAP; //DMA2D_RB_REGULAR;    /* No ForeGround Red/Blue swap */
+  Dma2dHandle.LayerCfg[1].AlphaInverted  = DMA2D_REGULAR_ALPHA; /* No ForeGround Alpha inversion */
+
+  /* DMA2D Initialization */
+  if(HAL_DMA2D_Init(&Dma2dHandle) == HAL_OK)
+  {
+    if(HAL_DMA2D_ConfigLayer(&Dma2dHandle, 1) == HAL_OK)
+    {
+      if (HAL_DMA2D_Start(&Dma2dHandle, source, destination, xsize, ysize) == HAL_OK)
+      {
+        /* Polling For DMA transfer */
+        HAL_DMA2D_PollForTransfer(&Dma2dHandle, 100);
+      }
+    }
+  }
+}
+#else
 static void CopyInVirtualBuffer(uint32_t *pSrc, uint32_t *pDst, uint16_t x, uint16_t y, uint16_t xsize, uint16_t ysize)
 {
   uint32_t destination = (uint32_t)pDst + (y * 390 + x) * 4;
@@ -759,6 +841,7 @@ static void CopyInVirtualBuffer(uint32_t *pSrc, uint32_t *pDst, uint16_t x, uint
     }
   }
 }
+#endif
 
 /**
   * @brief  System Clock Configuration
