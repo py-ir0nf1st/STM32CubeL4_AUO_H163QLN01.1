@@ -82,6 +82,7 @@ GFXMMU_HandleTypeDef GfxmmuHandle;
 DMA2D_HandleTypeDef  Dma2dHandle;
 DSI_HandleTypeDef    DsiHandle;
 LTDC_HandleTypeDef   LtdcHandle;
+UART_HandleTypeDef Usart2Handle;
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -110,6 +111,58 @@ static void Error_Handler(void);
 static uint8_t LCD_Config(void);
 static void LCD_PowerOff(void);
 static void LCD_PowerOn(void);
+
+static void MX_USART2_UART_Init(void)
+{
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2;
+  PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
+	Error_Handler();
+  }
+
+  /* Peripheral clock enable */
+  __HAL_RCC_USART2_CLK_ENABLE();
+
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  /**USART2 GPIO Configuration
+  PA3     ------> USART2_RX
+  PA2     ------> USART2_TX
+  */
+  GPIO_InitStruct.Pin = USART2_RX_Pin|USART2_TX_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  Usart2Handle.Instance = USART2;
+  Usart2Handle.Init.BaudRate = 115200;
+  Usart2Handle.Init.WordLength = UART_WORDLENGTH_8B;
+  Usart2Handle.Init.StopBits = UART_STOPBITS_1;
+  Usart2Handle.Init.Parity = UART_PARITY_NONE;
+  Usart2Handle.Init.Mode = UART_MODE_TX_RX;
+  Usart2Handle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  Usart2Handle.Init.OverSampling = UART_OVERSAMPLING_16;
+  Usart2Handle.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  Usart2Handle.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  Usart2Handle.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&Usart2Handle) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetTxFifoThreshold(&Usart2Handle, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetRxFifoThreshold(&Usart2Handle, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_DisableFifoMode(&Usart2Handle) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
 
 /**
   * @brief  Copy an input RGB888 buffer to output RGB888 with output offset
