@@ -233,7 +233,7 @@ int main(void)
   SystemClock_Config();
 
   MX_USART2_UART_Init();
-  DebugPrintf("A MIPI example!\r\n");
+  DebugPrintf("A MIPI DSI example for RM69032!\r\n");
 
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
@@ -359,15 +359,17 @@ static uint8_t DisplayController_Config(void) {
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBE, .payload_size = 3, .payload = {0x32, 0x30, 0x70}},
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xCF, .payload_size = 7, .payload = {0xFF, 0xD4, 0x95, 0xE8, 0x4F, 0x00, 0x04}},
 	    // SET_TEAR_ON ?
-	    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0x35, .payload_size = 1, .payload = {0x01}},
-	    //{.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P0, .cmd = 0x34, .payload_size = 0},
+	    //{.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0x35, .payload_size = 1, .payload = {0x00}},
+	    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P0, .cmd = 0x34, .payload_size = 0},
 	    // SET_ADDRESS_MODE ?
 	    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0x36, .payload_size = 1, .payload = {0x00}},
 	    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0xC0, .payload_size = 1, .payload = {0x20}},
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xC2, .payload_size = 6, .payload = {0x17, 0x17, 0x17, 0x17, 0x17, 0x0B}},
 	    //{.hdr_type = 0x32},
 
-      {.hdr_type = DSI_DCS_LONG_PKT_WRITE,    .cmd = 0x51, .payload_size = 1, .payload = {0x00}},
+	    //{.hdr_type = INIT_OP_DELAY, .delay_time = 100},
+
+      //{.hdr_type = DSI_DCS_LONG_PKT_WRITE,    .cmd = 0x51, .payload_size = 1, .payload = {0x00}},
 
 #if 0
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x02}},
@@ -403,7 +405,7 @@ static uint8_t DisplayController_Config(void) {
 
 	    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P0,	.cmd = 0x29, .payload_size = 0},
 
-	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x00}},
+	    //{.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x00}},
 
 	    {.hdr_type = INIT_OP_DELAY, .delay_time = 10},
 
@@ -415,25 +417,28 @@ static uint8_t DisplayController_Config(void) {
 	    const INIT_OP *op = &rm69032_init_ops[i];
 	    switch (op->hdr_type) {
 	      case DSI_DCS_SHORT_PKT_WRITE_P0:
-	        rc = HAL_DSI_ShortWrite(&DsiHandle, 0, op->hdr_type, op->cmd, 0);
-	        if (HAL_OK != rc) {
-	          DebugPrintf("[%d]DSI_DCS_SHORT_PKT_WRITE_P0 returned[%d] cmd[%d]\r\n", i, rc, op->cmd);
-	          return LCD_ERROR;
-	        }
+	        //do {
+	          rc = HAL_DSI_ShortWrite(&DsiHandle, 0, op->hdr_type, op->cmd, 0);
+	          if (HAL_OK != rc) {
+	            DebugPrintf("[%d]DSI_DCS_SHORT_PKT_WRITE_P0 returned[%d] DSIErrCode[0x%x] cmd[0x%x]\r\n", i, rc, HAL_DSI_GetError(&DsiHandle), op->cmd);
+	          }
+	        //} while(rc != HAL_OK);
 	        break;
 	      case DSI_DCS_SHORT_PKT_WRITE_P1:
-	        rc = HAL_DSI_ShortWrite(&DsiHandle, 0, op->hdr_type, op->cmd, op->payload[0]);
-	        if (HAL_OK != rc) {
-	        	DebugPrintf("[%d]DSI_DCS_SHORT_PKT_WRITE_P1 returned[%d] cmd[%d] p1[%d]\r\n", i, rc, op->cmd, op->payload[0]);
-	          return LCD_ERROR;
-	        }
+	        //do {
+	          rc = HAL_DSI_ShortWrite(&DsiHandle, 0, op->hdr_type, op->cmd, op->payload[0]);
+	          if (HAL_OK != rc) {
+	          	DebugPrintf("[%d]DSI_DCS_SHORT_PKT_WRITE_P1 returned[%d] DSIErrCode[0x%x] cmd[0x%x] p1[0x%x]\r\n", i, rc, HAL_DSI_GetError(&DsiHandle), op->cmd, op->payload[0]);
+	          }
+	        //} while (rc != HAL_OK);
 	        break;
 	      case DSI_DCS_LONG_PKT_WRITE:
-	        rc = HAL_DSI_LongWrite(&DsiHandle, 0, op->hdr_type, op->payload_size, op->cmd, (uint8_t *)op->payload);
-	        if (HAL_OK != rc) {
-	          DebugPrintf("[%d]DSI_DCS_LONG_PKT_WRITE returned[%d] cmd[%d] size[%d]\r\n", i, rc, op->cmd, op->payload_size);
-              return LCD_ERROR;
-	        }
+	        //do {
+	          rc = HAL_DSI_LongWrite(&DsiHandle, 0, op->hdr_type, op->payload_size, op->cmd, (uint8_t *)op->payload);
+	          if (HAL_OK != rc) {
+	            DebugPrintf("[%d]DSI_DCS_LONG_PKT_WRITE returned[%d] DSIErrCode[0x%x] cmd[0x%x] size[%d]\r\n", i, rc, HAL_DSI_GetError(&DsiHandle), op->cmd, op->payload_size);
+	          }
+	        //} while (rc != HAL_OK);
 	        break;
 	      case INIT_OP_ELVSS_ON:
 	        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
@@ -610,16 +615,17 @@ static uint8_t LCD_Config(void)
   }
 #endif
 
-  LPCmd.LPGenShortWriteNoP  = DSI_LP_GSW0P_ENABLE;
-  LPCmd.LPGenShortWriteOneP = DSI_LP_GSW1P_ENABLE;
-  LPCmd.LPGenShortWriteTwoP = DSI_LP_GSW2P_ENABLE;
-  LPCmd.LPGenShortReadNoP   = DSI_LP_GSR0P_ENABLE;
-  LPCmd.LPGenShortReadOneP  = DSI_LP_GSR1P_ENABLE;
-  LPCmd.LPGenShortReadTwoP  = DSI_LP_GSR2P_ENABLE;
+#if 0
+  LPCmd.LPGenShortWriteNoP  = DSI_LP_GSW0P_DISABLE;
+  LPCmd.LPGenShortWriteOneP = DSI_LP_GSW1P_DISABLE;
+  LPCmd.LPGenShortWriteTwoP = DSI_LP_GSW2P_DISABLE;
+  LPCmd.LPGenShortReadNoP   = DSI_LP_GSR0P_DISABLE;
+  LPCmd.LPGenShortReadOneP  = DSI_LP_GSR1P_DISABLE;
+  LPCmd.LPGenShortReadTwoP  = DSI_LP_GSR2P_DISABLE;
   LPCmd.LPGenLongWrite      = DSI_LP_GLW_DISABLE;
-  LPCmd.LPDcsShortWriteNoP  = DSI_LP_DSW0P_ENABLE;
-  LPCmd.LPDcsShortWriteOneP = DSI_LP_DSW1P_ENABLE;
-  LPCmd.LPDcsShortReadNoP   = DSI_LP_DSR0P_ENABLE;
+  LPCmd.LPDcsShortWriteNoP  = DSI_LP_DSW0P_DISABLE;
+  LPCmd.LPDcsShortWriteOneP = DSI_LP_DSW1P_DISABLE;
+  LPCmd.LPDcsShortReadNoP   = DSI_LP_DSR0P_DISABLE;
   LPCmd.LPDcsLongWrite      = DSI_LP_DLW_DISABLE;
   LPCmd.LPMaxReadPacket     = DSI_LP_MRDP_DISABLE;
   LPCmd.AcknowledgeRequest  = DSI_ACKNOWLEDGE_DISABLE;
@@ -627,6 +633,25 @@ static uint8_t LCD_Config(void)
   {
     return(LCD_ERROR);
   }
+#else
+  LPCmd.LPGenShortWriteNoP  = DSI_LP_GSW0P_ENABLE;
+  LPCmd.LPGenShortWriteOneP = DSI_LP_GSW1P_ENABLE;
+  LPCmd.LPGenShortWriteTwoP = DSI_LP_GSW2P_ENABLE;
+  LPCmd.LPGenShortReadNoP   = DSI_LP_GSR0P_ENABLE;
+  LPCmd.LPGenShortReadOneP  = DSI_LP_GSR1P_ENABLE;
+  LPCmd.LPGenShortReadTwoP  = DSI_LP_GSR2P_ENABLE;
+  LPCmd.LPGenLongWrite      = DSI_LP_GLW_ENABLE;
+  LPCmd.LPDcsShortWriteNoP  = DSI_LP_DSW0P_ENABLE;
+  LPCmd.LPDcsShortWriteOneP = DSI_LP_DSW1P_ENABLE;
+  LPCmd.LPDcsShortReadNoP   = DSI_LP_DSR0P_ENABLE;
+  LPCmd.LPDcsLongWrite      = DSI_LP_DLW_ENABLE;
+  LPCmd.LPMaxReadPacket     = DSI_LP_MRDP_DISABLE;
+  LPCmd.AcknowledgeRequest  = DSI_ACKNOWLEDGE_DISABLE;
+  if(HAL_DSI_ConfigCommand(&DsiHandle, &LPCmd) != HAL_OK)
+  {
+    return(LCD_ERROR);
+  }
+#endif
 
   CmdCfg.VirtualChannelID      = 0;
   CmdCfg.ColorCoding           = DSI_RGB888;
