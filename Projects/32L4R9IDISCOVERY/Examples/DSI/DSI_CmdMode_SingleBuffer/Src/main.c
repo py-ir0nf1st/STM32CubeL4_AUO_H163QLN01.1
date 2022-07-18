@@ -114,6 +114,8 @@ static void LCD_PowerOn(void);
 
 static void MX_USART2_UART_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
@@ -128,7 +130,7 @@ static void MX_USART2_UART_Init(void)
   PA3     ------> USART2_RX
   PA2     ------> USART2_TX
   */
-  GPIO_InitStruct.Pin = USART2_RX_Pin|USART2_TX_Pin;
+  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
@@ -221,6 +223,9 @@ int main(void)
 
   /* Configure the System clock to have a frequency of 120 MHz */
   SystemClock_Config();
+
+  MX_USART2_UART_Init();
+  HAL_UART_Transmit(&Usart2Handle, "Hello world\n", 12, 1000);
 
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
