@@ -23,6 +23,7 @@
 #include "image_390x390_rgb888.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 /*
  * @Harvey Zhang
@@ -74,15 +75,11 @@ __align(16) uint32_t  PhysFrameBuffer[91260];
 #endif
 #endif
 
-/* GFXMMU, LTDC and DSI handles */
-
-#if 0
-GFXMMU_HandleTypeDef GfxmmuHandle;
-#endif
+/* Peripheral handles */
 DMA2D_HandleTypeDef  Dma2dHandle;
 DSI_HandleTypeDef    DsiHandle;
 LTDC_HandleTypeDef   LtdcHandle;
-UART_HandleTypeDef Usart2Handle;
+UART_HandleTypeDef   Usart2Handle;
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -166,6 +163,17 @@ static void MX_USART2_UART_Init(void)
   }
 }
 
+size_t DebugPrintf(const char * format, ...) {
+  char buffer[1024];
+  va_list args;
+  va_start(args, format);
+  vsprintf(buffer, format, args);
+  size_t len = strlen(buffer);
+  HAL_UART_Transmit(&Usart2Handle, (const uint8_t *)buffer, len, 1000);
+  va_end(args);
+  return len;
+}
+
 /**
   * @brief  Copy an input RGB888 buffer to output RGB888 with output offset
   * @param  pSrc: Pointer to source buffer
@@ -207,7 +215,7 @@ static void Error_Handler(void)
   */
 int main(void)
 {
-  uint32_t  brightness = BRIGHTNESS_NORMAL;
+  //uint32_t  brightness = BRIGHTNESS_NORMAL;
 
   /* STM32L4xx HAL library initialization:
        - Configure the Flash prefetch, Instruction cache, Data cache
@@ -225,7 +233,7 @@ int main(void)
   SystemClock_Config();
 
   MX_USART2_UART_Init();
-  HAL_UART_Transmit(&Usart2Handle, "Hello world\n", 12, 1000);
+  DebugPrintf("A MIPI example!\r\n");
 
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
@@ -409,22 +417,22 @@ static uint8_t DisplayController_Config(void) {
 	      case DSI_DCS_SHORT_PKT_WRITE_P0:
 	        rc = HAL_DSI_ShortWrite(&DsiHandle, 0, op->hdr_type, op->cmd, 0);
 	        if (HAL_OK != rc) {
-	          __asm("bkpt 1");
+	          DebugPrintf("[%d]DSI_DCS_SHORT_PKT_WRITE_P0 returned[%d] cmd[%d]\r\n", i, rc, op->cmd);
 	          return LCD_ERROR;
 	        }
 	        break;
 	      case DSI_DCS_SHORT_PKT_WRITE_P1:
 	        rc = HAL_DSI_ShortWrite(&DsiHandle, 0, op->hdr_type, op->cmd, op->payload[0]);
 	        if (HAL_OK != rc) {
-	          __asm("bkpt 1");
+	        	DebugPrintf("[%d]DSI_DCS_SHORT_PKT_WRITE_P1 returned[%d] cmd[%d] p1[%d]\r\n", i, rc, op->cmd, op->payload[0]);
 	          return LCD_ERROR;
 	        }
 	        break;
 	      case DSI_DCS_LONG_PKT_WRITE:
 	        rc = HAL_DSI_LongWrite(&DsiHandle, 0, op->hdr_type, op->payload_size, op->cmd, (uint8_t *)op->payload);
 	        if (HAL_OK != rc) {
-	          __asm("bkpt 1");
-            return LCD_ERROR;
+	          DebugPrintf("[%d]DSI_DCS_LONG_PKT_WRITE returned[%d] cmd[%d] size[%d]\r\n", i, rc, op->cmd, op->payload_size);
+              return LCD_ERROR;
 	        }
 	        break;
 	      case INIT_OP_ELVSS_ON:
