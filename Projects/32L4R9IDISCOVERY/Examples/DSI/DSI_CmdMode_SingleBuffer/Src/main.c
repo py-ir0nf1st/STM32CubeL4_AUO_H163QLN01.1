@@ -253,469 +253,6 @@ static uint8_t DisplayController_Config(void) {
 /*************************/
 /* LCD POWER ON SEQUENCE */
 /*************************/
-//#define WATCH_TEST_SETTINGS
-//#define V11_DATASHEET
-#if defined (WATCH_TEST_SETTINGS)
-  uint8_t InitParam1[4]= {0x00, 0x04, 0x01, 0x89};
-  uint8_t InitParam2[4]= {0x00, 0x00, 0x01, 0x85};
-  uint8_t param_F0_0[5] = {0x55, 0xAA, 0x52, 0x08, 0x00};
-  uint8_t param_BD[5] = {0x01, 0x90, 0x14, 0x14, 0x00};
-  uint8_t param_BE_0[5] = {0x01, 0x90, 0x14, 0x14, 0x01};
-  uint8_t param_BF[5] = {0x01, 0x90, 0x14, 0x14, 0x00};
-  uint8_t param_BB[3] = {0x07, 0x07, 0x07};
-  uint8_t param_C7[1] = {0x40};
-  uint8_t param_F0_2[5] = {0x55, 0xAA, 0x52, 0x08, 0x02};
-  uint8_t param_FE[2] = {0x08, 0x50};
-  uint8_t param_C3[3] = {0xF2, 0x95, 0x04};
-  uint8_t param_CA[1] = {0x04};
-  uint8_t param_F0_1[5] = {0x55, 0xAA, 0x52, 0x08, 0x01};
-  uint8_t param_B0[3] = {0x03, 0x03, 0x03};
-  uint8_t param_B1[3] = {0x05, 0x05, 0x05};
-  uint8_t param_B2[3] = {0x01, 0x01, 0x01};
-  uint8_t param_B4[3] = {0x07, 0x07, 0x07};
-  uint8_t param_B5[3] = {0x03, 0x03, 0x03};
-  uint8_t param_B6[3] = {0x53, 0x53, 0x53};
-  uint8_t param_B7[3] = {0x33, 0x33, 0x33};
-  uint8_t param_B8[3] = {0x23, 0x23, 0x23};
-  uint8_t param_B9[3] = {0x03, 0x03, 0x03};
-  uint8_t param_BA[3] = {0x03, 0x03, 0x03};
-  uint8_t param_BE_1[3] = {0x32, 0x30, 0x70};
-  uint8_t param_CF[7] = {0xFF, 0xD4, 0x95, 0xEF, 0x4F, 0x00, 0x04};
-  uint8_t param_35[1] = {0x00};
-  uint8_t param_36[1] = {0x00};
-  uint8_t param_C0[1] = {0x20};
-  uint8_t param_C2[6] = {0x17, 0x17, 0x17, 0x17, 0x17, 0x0B};
-
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0xFE, 0x01);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x06, 0x62);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x0E, 0x80);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x0F, 0x80);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x10, 0x71);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x13, 0x81);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x14, 0x81);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x15, 0x82);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x16, 0x82);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x18, 0x88);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x19, 0x55);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1A, 0x10);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1C, 0x99);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1D, 0x03);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1E, 0x03);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1F, 0x03);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x20, 0x03);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x25, 0x03);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x26, 0x8D);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x2A, 0x03);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x2B, 0x8D);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x36, 0x00);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x37, 0x10);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x3A, 0x00);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x3B, 0x00);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x3D, 0x20);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x3F, 0x3A);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x40, 0x30);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x41, 0x1A);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x42, 0x33);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x43, 0x22);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x44, 0x11);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x45, 0x66);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x46, 0x55);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x47, 0x44);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x4C, 0x33);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x4D, 0x22);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x4E, 0x11);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x4F, 0x66);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x50, 0x55);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x51, 0x44);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x57, 0x33);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x6B, 0x1B);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x70, 0x55);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x74, 0x0C);
-
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_F0_0), 0xF0, param_F0_0);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_BD), 0xBD, param_BD);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_BE_0), 0xBE, param_BE_0);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_BF), 0xBF, param_BF);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_BB), 0xBB, param_BB);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_C7), 0xC7, param_C7);
-
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_F0_2), 0xF0, param_F0_2);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_FE), 0xFE, param_FE);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_C3), 0xC3, param_C3);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_CA), 0xCA, param_CA);
-
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_F0_1), 0xF0, param_F0_1);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_B0), 0xB0, param_B0);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_B1), 0xB1, param_B1);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_B2), 0xB2, param_B2);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_B4), 0xB4, param_B4);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_B5), 0xB5, param_B5);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_B6), 0xB6, param_B6);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_B7), 0xB7, param_B7);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_B8), 0xB8, param_B8);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_B9), 0xB9, param_B9);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_BA), 0xBA, param_BA);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_BE_1), 0xBE, param_BE_1);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_CF), 0xCF, param_CF);
-
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_35), 0x35, param_35);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_36), 0x36, param_36);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_C0), 0xC0, param_C0);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_C2), 0xC2, param_C2);
-
-  /* Set memory address MODIFIED vs ORIGINAL */
-  //HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, 4, DSI_SET_COLUMN_ADDRESS, InitParam1);
-  //HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, 4, DSI_SET_PAGE_ADDRESS, InitParam2);
-
-  /* Sleep out */
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x11, 0x00);
-
-  HAL_Delay(300);
-
-  /* Set default Brightness */
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x29, 0x00);
-
-  HAL_Delay(30);
-  /* Set display off */
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P0, DSI_SET_DISPLAY_ON, 0x0);
-
-#elif defined (V11_DATASHEET)
-  uint8_t param_F0_0[5] = {0x55, 0xAA, 0x52, 0x08, 0x00};
-#if !defined (V11_DATASHEET)
-  uint8_t param_BD[5] = {0x01, 0x90, 0x14, 0x14, 0x00};
-#else
-  uint8_t param_BD[5] = {0x03, 0x20, 0x14, 0x4B, 0x00};
-#endif
-  uint8_t param_BE_0[5] = {0x03, 0x20, 0x14, 0x4B, 0x01};
-  uint8_t param_BF[5] = {0x03, 0x20, 0x14, 0x4B, 0x00};
-  uint8_t param_BB[3] = {0x07, 0x07, 0x07};
-  uint8_t param_C7[1] = {0x40};
-  uint8_t param_F0_2[5] = {0x55, 0xAA, 0x52, 0x08, 0x02};
-#if defined (V11_DATASHEET)
-  uint8_t param_EB = 0x02; // in the v11 datasheet
-#endif
-  uint8_t param_FE[2] = {0x08, 0x50};
-  uint8_t param_C3[3] = {0xF2, 0x95, 0x04};
-#if defined (V11_DATASHEET)
-  uint8_t param_E9[3] = {0x00, 0x36, 0x38}; // in the v11 datasheet
-#endif
-  uint8_t param_CA = 0x04;
-  uint8_t param_F0_1[5] = {0x55, 0xAA, 0x52, 0x08, 0x01};
-  uint8_t param_B0[3] = {0x03, 0x03, 0x03};
-  uint8_t param_B1[3] = {0x05, 0x05, 0x05};
-  uint8_t param_B2[3] = {0x01, 0x01, 0x01};
-  uint8_t param_B4[3] = {0x07, 0x07, 0x07};
-  uint8_t param_B5[3] = {0x03, 0x03, 0x03};
-#if !defined (V11_DATASHEET)
-  uint8_t param_B6[3] = {0x53, 0x53, 0x53};
-#else
-  uint8_t param_B6[3] = {0x55, 0x55, 0x55};
-#endif
-#if !defined (V11_DATASHEET)
-  uint8_t param_B7[3] = {0x33, 0x33, 0x33};
-#else
-  uint8_t param_B7[3] = {0x36, 0x36, 0x36};
-#endif
-  uint8_t param_B8[3] = {0x23, 0x23, 0x23};
-  uint8_t param_B9[3] = {0x03, 0x03, 0x03};
-  uint8_t param_BA[3] = {0x03, 0x03, 0x03};
-  uint8_t param_BE_1[3] = {0x32, 0x30, 0x70};
-#if !defined (V11_DATASHEET)
-  uint8_t param_CF[7] = {0xFF, 0xD4, 0x95, 0xEF, 0x4F, 0x00, 0x04};
-#else
-  uint8_t param_CF[7] = {0xFF, 0xD4, 0x95, 0xE8, 0x4F, 0x00, 0x04};
-#endif
-#if !defined (V11_DATASHEET)
-  uint8_t param_35 = 0x00;
-#else
-  uint8_t param_35 = 0x01;
-#endif
-  uint8_t param_36 = 0x00;
-  uint8_t param_C0 = 0x20;
-  uint8_t param_C2[6] = {0x17, 0x17, 0x17, 0x17, 0x17, 0x0B};
-#if defined (V11_DATASHEET)
-  uint8_t param_F0_3[5] = {0x55, 0xAA, 0x52, 0x08, 0x02}; // in the v11 datasheet
-  uint8_t param_ED[8] = {0x48, 0x00, 0xFF, 0x13, 0x08, 0x30, 0x0C, 0x00}; // in the v11 datasheet
-#endif
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0xFE, 0x01);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x06, 0x62);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x0E, 0x80);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x0F, 0x80);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x10, 0x71);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x13, 0x81);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x14, 0x81);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x15, 0x82);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x16, 0x82);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x18, 0x88);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x19, 0x55);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1A, 0x10);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1C, 0x99);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1D, 0x03);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1E, 0x03);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1F, 0x03);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x20, 0x03);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x25, 0x03);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x26, 0x8D);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x2A, 0x03);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x2B, 0x8D);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x36, 0x00);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x37, 0x10);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x3A, 0x00);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x3B, 0x00);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x3D, 0x20);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x3F, 0x3A);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x40, 0x30);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x41, 0x1A);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x42, 0x33);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x43, 0x22);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x44, 0x11);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x45, 0x66);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x46, 0x55);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x47, 0x44);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x4C, 0x33);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x4D, 0x22);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x4E, 0x11);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x4F, 0x66);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x50, 0x55);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x51, 0x44);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x57, 0x33);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x6B, 0x1B);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x70, 0x55);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x74, 0x0C);
-
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_F0_0), 0xF0, param_F0_0);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_BD), 0xBD, param_BD);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_BE_0), 0xBE, param_BE_0);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_BF), 0xBF, param_BF);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_BB), 0xBB, param_BB);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_C7), 0xC7, param_C7);
-
-#if defined (V11_DATASHEET)
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0xEB, param_EB);
-#endif
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_F0_2), 0xF0, param_F0_2);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_FE), 0xFE, param_FE);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_C3), 0xC3, param_C3);
-#if defined (V11_DATASHEET)
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_E9), 0xE9, param_E9);
-#endif
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0xCA, param_CA);
-
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_F0_1), 0xF0, param_F0_1);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_B0), 0xB0, param_B0);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_B1), 0xB1, param_B1);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_B2), 0xB2, param_B2);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_B4), 0xB4, param_B4);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_B5), 0xB5, param_B5);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_B6), 0xB6, param_B6);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_B7), 0xB7, param_B7);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_B8), 0xB8, param_B8);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_B9), 0xB9, param_B9);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_BA), 0xBA, param_BA);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_BE_1), 0xBE, param_BE_1);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_CF), 0xCF, param_CF);
-
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x35, param_35);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1,  0x36, param_36);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0xC0, param_C0);
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_C2), 0xC2, param_C2);
-
-  HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, sizeof(param_F0_0), 0xF0, param_F0_0);
-
-  /* Sleep out */
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P0, DSI_EXIT_SLEEP_MODE, 0x00);
-
-  HAL_Delay(300);
-
-  /* Set default Brightness */
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x51, BRIGHTNESS_NORMAL);
-  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P0, DSI_SET_DISPLAY_ON, 0x00);
-
-#else
-	#if 0
-	  /* Step 1 */
-	  /* Go to command 2 */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0xFE, 0x01);
-	  /* IC Frame rate control, set power, sw mapping, mux switch timing command */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x06, 0x62);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x0E, 0x80);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x0F, 0x80);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x10, 0x71);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x13, 0x81);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x14, 0x81);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x15, 0x82);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x16, 0x82);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x18, 0x88);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x19, 0x55);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1A, 0x10);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1C, 0x99);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1D, 0x03);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1E, 0x03);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1F, 0x03);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x20, 0x03);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x25, 0x03);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x26, 0x8D);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x2A, 0x03);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x2B, 0x8D);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x36, 0x00);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x37, 0x10);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x3A, 0x00);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x3B, 0x00);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x3D, 0x20);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x3F, 0x3A);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x40, 0x30);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x41, 0x1A);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x42, 0x33);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x43, 0x22);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x44, 0x11);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x45, 0x66);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x46, 0x55);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x47, 0x44);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x4C, 0x33);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x4D, 0x22);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x4E, 0x11);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x4F, 0x66);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x50, 0x55);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x51, 0x44);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x57, 0x33);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x6B, 0x1B);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x70, 0x55);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x74, 0x0C);
-
-	  /* Go to command 3 */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0xFE, 0x02);
-	  /* Set the VGMP/VGSP coltage control */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x9B, 0x40);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x9C, 0x00);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x9D, 0x20);
-
-	  /* Go to command 4 */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0xFE, 0x03);
-	  /* Set the VGMP/VGSP coltage control */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x9B, 0x40);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x9C, 0x00);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x9D, 0x20);
-
-	  /* Go to command 5 */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0xFE, 0x04);
-	  /* VSR command */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x5D, 0x10);
-	  /* VSR1 timing set */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x00, 0x8D);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x01, 0x00);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x02, 0x01);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x03, 0x01);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x04, 0x10);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x05, 0x01);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x06, 0xA7);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x07, 0x20);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x08, 0x00);
-	  /* VSR2 timing set */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x09, 0xC2);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x0A, 0x00);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x0B, 0x02);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x0C, 0x01);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x0D, 0x40);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x0E, 0x06);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x0F, 0x01);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x10, 0xA7);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x11, 0x00);
-	  /* VSR3 timing set */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x12, 0xC2);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x13, 0x00);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x14, 0x02);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x15, 0x01);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x16, 0x40);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x17, 0x07);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x18, 0x01);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x19, 0xA7);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1A, 0x00);
-	  /* VSR4 timing set */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1B, 0x82);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1C, 0x00);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1D, 0xFF);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1E, 0x05);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x1F, 0x60);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x20, 0x02);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x21, 0x01);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x22, 0x7C);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x23, 0x00);
-	  /* VSR5 timing set */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x24, 0xC2);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x25, 0x00);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x26, 0x04);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x27, 0x02);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x28, 0x70);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x29, 0x05);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x2A, 0x74);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x2B, 0x8D);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x2D, 0x00);
-	  /* VSR6 timing set */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x2F, 0xC2);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x30, 0x00);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x31, 0x04);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x32, 0x02);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x33, 0x70);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x34, 0x07);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x35, 0x74);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x36, 0x8D);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x37, 0x00);
-	  /* VSR marping command */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x5E, 0x20);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x5F, 0x31);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x60, 0x54);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x61, 0x76);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x62, 0x98);
-
-	  /* Go to command 6 */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0xFE, 0x05);
-	  /* Set the ELVSS voltage */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x05, 0x17);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x2A, 0x04);
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x91, 0x00);
-
-	  /* Go back in standard commands */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0xFE, 0x00);
-
-	  /* Set the Pixel format */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x3A, 0x07);
-
-	  /* Set tear off */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, DSI_SET_TEAR_OFF, 0x0);
-
-	  /* Set DSI mode to internal timing added vs ORIGINAL for Command mode */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0xC2, 0x0);
-
-#if 0
-	  /* Set memory address MODIFIED vs ORIGINAL */
-	  {
-	    uint8_t InitParam1[4]= {0x00, 0, 0x01, 0x40};
-	    uint8_t InitParam2[4]= {0x00, 0, 0x01, 0x40};
-
-	    HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, 4, DSI_SET_COLUMN_ADDRESS, InitParam1);
-	    HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, 4, DSI_SET_PAGE_ADDRESS, InitParam2);
-	  }
-#endif
-
-	  /* Sleep out */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P0, DSI_EXIT_SLEEP_MODE, 0x0);
-
-	  HAL_Delay(120);
-
-	  /* Set default Brightness */
-	  HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x51, BRIGHTNESS_NORMAL);
-
-	  /* Set display on */
-	  if(HAL_DSI_ShortWrite(&DsiHandle,
-	                        0,
-	                        DSI_DCS_SHORT_PKT_WRITE_P0,
-	                        DSI_SET_DISPLAY_ON,
-	                        0x0) != HAL_OK)
-	  {
-	    return(LCD_ERROR);
-	  }
-	#else
-
 	#define INIT_OP_ELVSS_ON 0xFFFFFFFE
 	#define INIT_OP_DELAY 0xFFFFFFFF
 
@@ -756,7 +293,7 @@ static uint8_t DisplayController_Config(void) {
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBE, .payload_size = 3, .payload = {0x32, 0x30, 0x70}},
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xCF, .payload_size = 7, .payload = {0xFF, 0xD4, 0x95, 0xE8, 0x4F, 0x00, 0x04}},
 	    // SET_TEAR_ON ?
-	    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0x35, .payload_size = 1, .payload = {0x00}},
+	    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0x35, .payload_size = 1, .payload = {0x01}},
 	    //{.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P0, .cmd = 0x34, .payload_size = 0},
 	    // SET_ADDRESS_MODE ?
 	    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0x36, .payload_size = 1, .payload = {0x00}},
@@ -764,9 +301,9 @@ static uint8_t DisplayController_Config(void) {
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xC2, .payload_size = 6, .payload = {0x17, 0x17, 0x17, 0x17, 0x17, 0x0B}},
 	    //{.hdr_type = 0x32},
 
-      //{.hdr_type = DSI_DCS_LONG_PKT_WRITE,    .cmd = 0x51, .payload_size = 1, .payload = {0x00}},
+      {.hdr_type = DSI_DCS_LONG_PKT_WRITE,    .cmd = 0x51, .payload_size = 1, .payload = {0x00}},
 
-#if 1
+#if 0
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x02}},
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xFF, 0x13, 0x08, 0x30, 0x0C, 0x00}},
 
@@ -777,7 +314,7 @@ static uint8_t DisplayController_Config(void) {
 
 	    {.hdr_type = INIT_OP_DELAY, .delay_time = 300},
 
-#if 1
+#if 0
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x02}},
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xFE, 0x13, 0x08, 0x30, 0x0C, 0x00}},
 
@@ -807,17 +344,30 @@ static uint8_t DisplayController_Config(void) {
 	    {.hdr_type = INIT_OP_ELVSS_ON}
 	  };
 
+	  HAL_StatusTypeDef rc;
 	  for (int i = 0; i < sizeof(rm69032_init_ops) / sizeof(INIT_OP); i ++) {
 	    const INIT_OP *op = &rm69032_init_ops[i];
 	    switch (op->hdr_type) {
 	      case DSI_DCS_SHORT_PKT_WRITE_P0:
-	        HAL_DSI_ShortWrite(&DsiHandle, 0, op->hdr_type, op->cmd, 0);
+	        rc = HAL_DSI_ShortWrite(&DsiHandle, 0, op->hdr_type, op->cmd, 0);
+	        if (HAL_OK != rc) {
+	          __asm("bkpt 1");
+	          return LCD_ERROR;
+	        }
 	        break;
 	      case DSI_DCS_SHORT_PKT_WRITE_P1:
-	        HAL_DSI_ShortWrite(&DsiHandle, 0, op->hdr_type, op->cmd, op->payload[0]);
+	        rc = HAL_DSI_ShortWrite(&DsiHandle, 0, op->hdr_type, op->cmd, op->payload[0]);
+	        if (HAL_OK != rc) {
+	          __asm("bkpt 1");
+	          return LCD_ERROR;
+	        }
 	        break;
 	      case DSI_DCS_LONG_PKT_WRITE:
-	        HAL_DSI_LongWrite(&DsiHandle, 0, op->hdr_type, op->payload_size, op->cmd, (uint8_t *)op->payload);
+	        rc = HAL_DSI_LongWrite(&DsiHandle, 0, op->hdr_type, op->payload_size, op->cmd, (uint8_t *)op->payload);
+	        if (HAL_OK != rc) {
+	          __asm("bkpt 1");
+            return LCD_ERROR;
+	        }
 	        break;
 	      case INIT_OP_ELVSS_ON:
 	        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
@@ -829,8 +379,7 @@ static uint8_t DisplayController_Config(void) {
 	        break;
 	    }
 	  }
-	#endif
-	#endif
+	  return LCD_OK;
 }
 /**
   * @brief  Initializes the DSI LCD.
@@ -938,29 +487,19 @@ static uint8_t LCD_Config(void)
   /*********************/
 
   /* DSI initialization */
+  /* DSI data lane 250Mbps (a bit higher than 235,7424 Mbps)
+   * TX escape clock 15.625Mhz
+   */
+
   __HAL_DSI_RESET_HANDLE_STATE(&DsiHandle);
   DsiHandle.Instance = DSI;
   DsiHandle.Init.AutomaticClockLaneControl = DSI_AUTO_CLK_LANE_CTRL_DISABLE;
-  /* We have 1 data lane at 500Mbps => lane byte clock at 500/8 = 62,5 MHZ */
-  /* We want TX escape clock at around 20MHz and under 20MHz so clock division is set to 4 */
   DsiHandle.Init.TXEscapeCkdiv             = 4;
   DsiHandle.Init.NumberOfLanes             = DSI_ONE_DATA_LANE;
-  /* We have HSE value at 16 Mhz and we want data lane at 500Mbps */
   dsiPllInit.PLLNDIV = 125;
   dsiPllInit.PLLIDF  = DSI_PLL_IN_DIV4;
   dsiPllInit.PLLODF  = DSI_PLL_OUT_DIV1;
   if(HAL_DSI_Init(&DsiHandle, &dsiPllInit) != HAL_OK)
-  {
-    return(LCD_ERROR);
-  }
-
-  PhyTimings.ClockLaneHS2LPTime  = 33; /* Tclk-post + Tclk-trail + Ths-exit = [(60ns + 52xUI) + (60ns) + (300ns)]/16ns */
-  PhyTimings.ClockLaneLP2HSTime  = 30; /* Tlpx + (Tclk-prepare + Tclk-zero) + Tclk-pre = [150ns + 300ns + 8xUI]/16ns */
-  PhyTimings.DataLaneHS2LPTime   = 11; /* Ths-trail + Ths-exit = [(60ns + 4xUI) + 100ns]/16ns */
-  PhyTimings.DataLaneLP2HSTime   = 21; /* Tlpx + (Ths-prepare + Ths-zero) + Ths-sync = [150ns + (145ns + 10xUI) + 8xUI]/16ns */
-  PhyTimings.DataLaneMaxReadTime = 0;
-  PhyTimings.StopWaitTime        = 7;
-  if(HAL_DSI_ConfigPhyTimer(&DsiHandle, &PhyTimings) != HAL_OK)
   {
     return(LCD_ERROR);
   }
@@ -978,6 +517,32 @@ static uint8_t LCD_Config(void)
   {
     return(LCD_ERROR);
   }
+
+  PhyTimings.ClockLaneHS2LPTime  = 33; /* Tclk-post + Tclk-trail + Ths-exit = [(60ns + 52xUI) + (60ns) + (300ns)]/16ns */
+  PhyTimings.ClockLaneLP2HSTime  = 30; /* Tlpx + (Tclk-prepare + Tclk-zero) + Tclk-pre = [150ns + 300ns + 8xUI]/16ns */
+  PhyTimings.DataLaneHS2LPTime   = 11; /* Ths-trail + Ths-exit = [(60ns + 4xUI) + 100ns]/16ns */
+  PhyTimings.DataLaneLP2HSTime   = 21; /* Tlpx + (Ths-prepare + Ths-zero) + Ths-sync = [150ns + (145ns + 10xUI) + 8xUI]/16ns */
+  PhyTimings.DataLaneMaxReadTime = 0;
+  PhyTimings.StopWaitTime        = 7;
+  if(HAL_DSI_ConfigPhyTimer(&DsiHandle, &PhyTimings) != HAL_OK)
+  {
+    return(LCD_ERROR);
+  }
+
+  if(HAL_DSI_ConfigFlowControl(&DsiHandle, DSI_FLOW_CONTROL_BTA) != HAL_OK)
+  {
+    return(LCD_ERROR);
+  }
+#if 0
+  if (HAL_DSI_SetLowPowerRXFilter(&DsiHandle, 10000) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_DSI_ConfigErrorMonitor(&DsiHandle, HAL_DSI_ERROR_NONE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
 
   LPCmd.LPGenShortWriteNoP  = DSI_LP_GSW0P_ENABLE;
   LPCmd.LPGenShortWriteOneP = DSI_LP_GSW1P_ENABLE;
@@ -1007,24 +572,29 @@ static uint8_t LCD_Config(void)
   CmdCfg.DEPolarity            = DSI_DATA_ENABLE_ACTIVE_HIGH;
   CmdCfg.VSyncPol              = DSI_VSYNC_FALLING;
   CmdCfg.AutomaticRefresh      = DSI_AR_DISABLE;
-  CmdCfg.TEAcknowledgeRequest  = DSI_TE_ACKNOWLEDGE_DISABLE;
+  CmdCfg.TEAcknowledgeRequest  = DSI_TE_ACKNOWLEDGE_ENABLE;
   if(HAL_DSI_ConfigAdaptedCommandMode(&DsiHandle, &CmdCfg) != HAL_OK)
   {
     return(LCD_ERROR);
   }
 
+  if (HAL_DSI_SetGenericVCID(&DsiHandle, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
   /* Disable the Tearing Effect interrupt activated by default on previous function */
   __HAL_DSI_DISABLE_IT(&DsiHandle, DSI_IT_TE);
-
-  if(HAL_DSI_ConfigFlowControl(&DsiHandle, DSI_FLOW_CONTROL_BTA) != HAL_OK)
-  {
-    return(LCD_ERROR);
-  }
 
   /* Enable DSI */
   __HAL_DSI_ENABLE(&DsiHandle);
 
-  DisplayController_Config();
+  //HAL_DSI_EnterULPMData(&DsiHandle);
+  if (LCD_OK != DisplayController_Config()) {
+    return LCD_ERROR;
+  }
+
+  //HAL_DSI_ExitULPMData(&DsiHandle);
 
   /* Enable DSI Wrapper */
   __HAL_DSI_WRAPPER_ENABLE(&DsiHandle);
