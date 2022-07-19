@@ -36,12 +36,34 @@
  * It's done with the help of gfxmmu.
  *
  * In our case, we are using a 320*320 square display with display controller RM69032.
+ *
  * There are several modifications required.
- * 1. We will need a full size frame buffer. The size is 320 * 320 * 3 / 4 = 76800 words.
- * 2. The gfxmmu has to be configured to display 320*320 square image.
+ * 1. The gfxmmu can't help to save memory when using square display, we don't need it anymore.
+ *
+ * 2. We will need a full size frame buffer. The size is 320 * 320 * 3 / 4 = 76800 words.
+ *
  * 3. The display controller initialization code has to be changed according to RM69032.
- * 4. The image data in image_390x390_rgb888.h has to be trimmed to be displayed on a 320*320 display.
- *    Here I choose to only display the up left corner.
+ *    3.1 The panel of the display is powered by TPS65631(ELVDD/ELVSS).
+ *        TPS65631 can be programmed from it CTRL pin to supply different voltage on ELVSS.
+ *        The CTRL pin of TPS65631 can be routed to SWRIE pin of the display controller
+ *        or it can be routed to the host.
+ *        So either the host or the display controller needs to program TPS65631.
+ *        In the current adapter board, TPS65631 CTRL pin is routed to PA8 of the host.
+ *        The code controlling PA8 only turns on TPS65631 for now. So ELVSS is -4V which might impact the life span of the display.
+ *        If you want to program TPS65631 to output -3.3V, you will need to generate 0x0C pulses on PA8(See the data sheet of TPS65631).
+ *
+ *    3.2 The initialization of RM69032 has been done under LP mode.
+ *        You can send instructions under HS mode but it looks like those instructions don't have any effect.(Just a guess)
+ *
+ *    3.3 During initialization of RM69032, you can't send SET_TEAR_ON otherwise all the following instructions will fail.
+ *        If you need enable TE signal from the display, probably you have send SET_TEAR_ON after all other initialization instructions.
+ *
+ * 4. The display controller is powered by VDD/IOVDD. After turning on VDD/IOVDD, make sure assert the DSI_RESET correctly.
+ *    The power on sequence is important, make sure to follow the sequence otherwise the display controller may not get a complete reset.
+ *
+ * 5. On the discovery board, USART2 of the host is routed to the STLINK virtual com port. I use USART2 to output debug information.
+ *    Very useful.
+ *
  */
 #define DISPLAY_DRIVER_RM69032
 
@@ -84,6 +106,11 @@ UART_HandleTypeDef   Usart2Handle;
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 
+/*
+ * VIDEO timing settings has been adjusted
+ * LTDC settings are calculated from the following numbers.
+ * DO NOT FORGET to recalculate/update LTDC settings if you change these.
+ */
 #define VSYNC               8
 #define VBP                 10
 #define VFP                 36
@@ -109,6 +136,9 @@ static uint8_t LCD_Config(void);
 static void LCD_PowerOff(void);
 static void LCD_PowerOn(void);
 
+/*
+ * USART2 is routed to STLINK VCP, you can use it to output debug information.
+ */
 static void MX_USART2_UART_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -243,6 +273,9 @@ int main(void)
   GPIO_InitStructure.Pull  = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
 
+  /*
+   * Turn off TPS65631 output so the power supply to ELVDD/ELVSS will be off
+   */
   HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
 
@@ -359,17 +392,17 @@ static uint8_t DisplayController_Config(void) {
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBE, .payload_size = 3, .payload = {0x32, 0x30, 0x70}},
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xCF, .payload_size = 7, .payload = {0xFF, 0xD4, 0x95, 0xE8, 0x4F, 0x00, 0x04}},
 	    // SET_TEAR_ON ?
-	    //{.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0x35, .payload_size = 1, .payload = {0x00}},
+	    // {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0x35, .payload_size = 1, .payload = {0x00}},
 	    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P0, .cmd = 0x34, .payload_size = 0},
 	    // SET_ADDRESS_MODE ?
 	    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0x36, .payload_size = 1, .payload = {0x00}},
 	    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0xC0, .payload_size = 1, .payload = {0x20}},
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xC2, .payload_size = 6, .payload = {0x17, 0x17, 0x17, 0x17, 0x17, 0x0B}},
-	    //{.hdr_type = 0x32},
+	    // {.hdr_type = 0x32},
 
-	    //{.hdr_type = INIT_OP_DELAY, .delay_time = 100},
+	    // {.hdr_type = INIT_OP_DELAY, .delay_time = 100},
 
-      //{.hdr_type = DSI_DCS_LONG_PKT_WRITE,    .cmd = 0x51, .payload_size = 1, .payload = {0x00}},
+        // {.hdr_type = DSI_DCS_LONG_PKT_WRITE,    .cmd = 0x51, .payload_size = 1, .payload = {0x00}},
 
 #if 0
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x02}},
@@ -405,7 +438,7 @@ static uint8_t DisplayController_Config(void) {
 
 	    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P0,	.cmd = 0x29, .payload_size = 0},
 
-	    //{.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x00}},
+	    // {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x00}},
 
 	    {.hdr_type = INIT_OP_DELAY, .delay_time = 10},
 
@@ -455,11 +488,12 @@ static uint8_t DisplayController_Config(void) {
 /**
   * @brief  Initializes the DSI LCD.
   * The initialization is done as below:
+  *     - Power recycle the display controller
+  *     - DMA2D initialization
   *     - DSI PLL initialization
   *     - DSI initialization
-  *     - GFXMMU initialization
   *     - LTDC initialization
-  *     - RM67162 LCD Display IC Driver initialization
+  *     - RM69032 LCD Display IC Driver initialization
   * @param  None
   * @retval LCD state
   */
@@ -513,6 +547,9 @@ static uint8_t LCD_Config(void)
   LtdcHandle.Init.VSPolarity         = LTDC_VSPOLARITY_AL;
   LtdcHandle.Init.DEPolarity         = LTDC_DEPOLARITY_AL;
   LtdcHandle.Init.PCPolarity         = LTDC_PCPOLARITY_IPC;
+  /*
+   * LTDC video timing settings calculated against HSYNC/VSYNC/HBP/HFP/VBP/VFP
+   */
   LtdcHandle.Init.HorizontalSync     = 7;   /* HSYNC width - 1 */
   LtdcHandle.Init.VerticalSync       = 7;   /* VSYNC width - 1 */
   LtdcHandle.Init.AccumulatedHBP     = 47;   /* HSYNC width + HBP - 1 */
@@ -541,8 +578,7 @@ static uint8_t LCD_Config(void)
   LayerCfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_PAxCA; /* Not Used: default value */
   LayerCfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_PAxCA; /* Not Used: default value */
   LayerCfg.FBStartAdress   = (uint32_t)PhysFrameBuffer;
-  LayerCfg.ImageWidth      = 320; /* virtual frame buffer contains 768 pixels per line for 24bpp */
-                                   /* (192 blocks * 16) / (24bpp/3) = 1024 pixels per ligne        */
+  LayerCfg.ImageWidth      = 320;
   LayerCfg.ImageHeight     = 320;
   LayerCfg.Backcolor.Red   = 0; /* Not Used: default value */
   LayerCfg.Backcolor.Green = 0; /* Not Used: default value */
@@ -558,10 +594,9 @@ static uint8_t LCD_Config(void)
   /*********************/
 
   /* DSI initialization */
-  /* DSI data lane 250Mbps (a bit higher than 235,7424 Mbps)
+  /* DSI data lane 500Mbps
    * TX escape clock 15.625Mhz
    */
-
   __HAL_DSI_RESET_HANDLE_STATE(&DsiHandle);
   DsiHandle.Instance = DSI;
   DsiHandle.Init.AutomaticClockLaneControl = DSI_AUTO_CLK_LANE_CTRL_DISABLE;
@@ -615,25 +650,10 @@ static uint8_t LCD_Config(void)
   }
 #endif
 
-#if 0
-  LPCmd.LPGenShortWriteNoP  = DSI_LP_GSW0P_DISABLE;
-  LPCmd.LPGenShortWriteOneP = DSI_LP_GSW1P_DISABLE;
-  LPCmd.LPGenShortWriteTwoP = DSI_LP_GSW2P_DISABLE;
-  LPCmd.LPGenShortReadNoP   = DSI_LP_GSR0P_DISABLE;
-  LPCmd.LPGenShortReadOneP  = DSI_LP_GSR1P_DISABLE;
-  LPCmd.LPGenShortReadTwoP  = DSI_LP_GSR2P_DISABLE;
-  LPCmd.LPGenLongWrite      = DSI_LP_GLW_DISABLE;
-  LPCmd.LPDcsShortWriteNoP  = DSI_LP_DSW0P_DISABLE;
-  LPCmd.LPDcsShortWriteOneP = DSI_LP_DSW1P_DISABLE;
-  LPCmd.LPDcsShortReadNoP   = DSI_LP_DSR0P_DISABLE;
-  LPCmd.LPDcsLongWrite      = DSI_LP_DLW_DISABLE;
-  LPCmd.LPMaxReadPacket     = DSI_LP_MRDP_DISABLE;
-  LPCmd.AcknowledgeRequest  = DSI_ACKNOWLEDGE_DISABLE;
-  if(HAL_DSI_ConfigCommand(&DsiHandle, &LPCmd) != HAL_OK)
-  {
-    return(LCD_ERROR);
-  }
-#else
+  /*
+   * RM69032 has to be initialized in LP mode
+   * Enable all LP mode commands
+   */
   LPCmd.LPGenShortWriteNoP  = DSI_LP_GSW0P_ENABLE;
   LPCmd.LPGenShortWriteOneP = DSI_LP_GSW1P_ENABLE;
   LPCmd.LPGenShortWriteTwoP = DSI_LP_GSW2P_ENABLE;
@@ -651,7 +671,6 @@ static uint8_t LCD_Config(void)
   {
     return(LCD_ERROR);
   }
-#endif
 
   CmdCfg.VirtualChannelID      = 0;
   CmdCfg.ColorCoding           = DSI_RGB888;
