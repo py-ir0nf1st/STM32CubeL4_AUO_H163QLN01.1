@@ -127,7 +127,7 @@ UART_HandleTypeDef   Usart2Handle;
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-static __IO int32_t pending_buffer = -1;
+static __IO int32_t pending_buffer = -1, drawInProgress = 0, refreshInProgress = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
@@ -224,6 +224,7 @@ static void WriteFrameBuffer(uint32_t *pSrc, uint32_t *pDst, uint16_t x, uint16_
     /* Polling For DMA transfer */
     HAL_DMA2D_PollForTransfer(&Dma2dHandle, 100);
   }
+  pending_buffer = 1;
 }
 
 /* Private functions ---------------------------------------------------------*/
@@ -290,46 +291,28 @@ int main(void)
   }
 
   /* Infinite loop */
-  uint8_t flag = 0;
+  uint8_t flag = 0, firstRefresh = 1;
   while(1)
   {
     BSP_LED_Toggle(LED2);
-    if (flag == 0) {
-      WriteFrameBuffer((uint32_t *)color_square_320x320_rgb888, PhysFrameBuffer, 0, 0, 320, 320);
-      flag = 1;
-    }
-    else {
-      WriteFrameBuffer((uint32_t *)bw_square_320x320_rgb888, PhysFrameBuffer, 0, 0, 320, 320);
-      flag = 0;
-    }
-    pending_buffer = 1;
-
-    /*Refresh the LCD display*/
-#if 0
-    uint8_t columnAddr[4]= {0x00, 0x00, 0x01, 0x3F};
-    uint8_t pageAddr[4]= {0x00, 0x00, 0x01, 0x3F};
-    HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, 4, DSI_SET_COLUMN_ADDRESS, columnAddr);
-    HAL_DSI_LongWrite(&DsiHandle, 0, DSI_DCS_LONG_PKT_WRITE, 4, DSI_SET_PAGE_ADDRESS, pageAddr);
-#endif
-    HAL_DSI_Refresh(&DsiHandle);
-
-    while (pending_buffer == 1);
-
-    //BSP_LED_On(LED2);
-
-    HAL_Delay(2000);
-#if 0
-    brightness = BRIGHTNESS_NORMAL;
-    HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x51, brightness);
-    while(brightness > BRIGHTNESS_MIN) {
-      brightness -= 1;
-      HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x51, brightness);
-      HAL_Delay(100);
-    }
-#endif
+      if (flag == 0) {
+        WriteFrameBuffer((uint32_t *)color_square_320x320_rgb888, PhysFrameBuffer, 0, 0, 320, 320);
+        DebugPrintf("Color square redraw!\r\n");
+        flag = 1;
+      }
+      else {
+        WriteFrameBuffer((uint32_t *)bw_square_320x320_rgb888, PhysFrameBuffer, 0, 0, 320, 320);
+        DebugPrintf("Bw square redraw!\r\n");
+        flag = 0;
+      }
+      HAL_DSI_ShortWrite(&DsiHandle, 0, DSI_DCS_SHORT_PKT_WRITE_P1, 0x35, 0);
+      //HAL_Delay(100);
   }
 }
 
+void HAL_DSI_TearingEffectCallback(DSI_HandleTypeDef *hdsi) {
+  HAL_DSI_Refresh(hdsi);
+}
 /**
   * @brief  End of Refresh DSI callback.
   * @param  hdsi: pointer to a DSI_HandleTypeDef structure that contains
@@ -338,10 +321,6 @@ int main(void)
   */
 void HAL_DSI_EndOfRefreshCallback(DSI_HandleTypeDef *hdsi)
 {
-  if(pending_buffer > 0)
-  {
-    pending_buffer = 0;
-  }
 }
 
 /** @defgroup Private_Functions Private Functions
@@ -391,8 +370,6 @@ static uint8_t DisplayController_Config(void) {
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBA, .payload_size = 3, .payload = {0x03, 0x03, 0x03}},
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xBE, .payload_size = 3, .payload = {0x32, 0x30, 0x70}},
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xCF, .payload_size = 7, .payload = {0xFF, 0xD4, 0x95, 0xE8, 0x4F, 0x00, 0x04}},
-	    // SET_TEAR_ON ?
-	    // {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0x35, .payload_size = 1, .payload = {0x00}},
 	    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P0, .cmd = 0x34, .payload_size = 0},
 	    // SET_ADDRESS_MODE ?
 	    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1,	.cmd = 0x36, .payload_size = 1, .payload = {0x00}},
@@ -402,9 +379,9 @@ static uint8_t DisplayController_Config(void) {
 
 	    // {.hdr_type = INIT_OP_DELAY, .delay_time = 100},
 
-        // {.hdr_type = DSI_DCS_LONG_PKT_WRITE,    .cmd = 0x51, .payload_size = 1, .payload = {0x00}},
+      // {.hdr_type = DSI_DCS_LONG_PKT_WRITE,    .cmd = 0x51, .payload_size = 1, .payload = {0x00}},
 
-#if 0
+#if 1
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x02}},
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xFF, 0x13, 0x08, 0x30, 0x0C, 0x00}},
 
@@ -415,7 +392,7 @@ static uint8_t DisplayController_Config(void) {
 
 	    {.hdr_type = INIT_OP_DELAY, .delay_time = 300},
 
-#if 0
+#if 1
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x02}},
 	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xED, .payload_size = 8, .payload = {0x48, 0x00, 0xFE, 0x13, 0x08, 0x30, 0x0C, 0x00}},
 
@@ -438,11 +415,13 @@ static uint8_t DisplayController_Config(void) {
 
 	    {.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P0,	.cmd = 0x29, .payload_size = 0},
 
-	    // {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x00}},
+	    {.hdr_type = DSI_DCS_LONG_PKT_WRITE,		.cmd = 0xF0, .payload_size = 5, .payload = {0x55, 0xAA, 0x52, 0x08, 0x00}},
 
 	    {.hdr_type = INIT_OP_DELAY, .delay_time = 10},
 
-	    {.hdr_type = INIT_OP_ELVSS_ON}
+	    {.hdr_type = INIT_OP_ELVSS_ON},
+	    //{.hdr_type = DSI_DCS_LONG_PKT_WRITE, .cmd = 0x44, .payload_size = 2, .payload = {0x00, 0x00}},
+	    //{.hdr_type = DSI_DCS_SHORT_PKT_WRITE_P1, .cmd = 0x35, .payload_size = 1, .payload = {0x00}},
 	  };
 
 	  HAL_StatusTypeDef rc;
@@ -542,6 +521,7 @@ static uint8_t LCD_Config(void)
 
   /* LTDC initialization */
   __HAL_LTDC_RESET_HANDLE_STATE(&LtdcHandle);
+
   LtdcHandle.Instance = LTDC;
   LtdcHandle.Init.HSPolarity         = LTDC_HSPOLARITY_AL;
   LtdcHandle.Init.VSPolarity         = LTDC_VSPOLARITY_AL;
@@ -592,7 +572,6 @@ static uint8_t LCD_Config(void)
   /*********************/
   /* DSI CONFIGURATION */
   /*********************/
-
   /* DSI initialization */
   /* DSI data lane 500Mbps
    * TX escape clock 15.625Mhz
@@ -676,7 +655,7 @@ static uint8_t LCD_Config(void)
   CmdCfg.ColorCoding           = DSI_RGB888;
   CmdCfg.CommandSize           = 320;
   CmdCfg.TearingEffectSource   = DSI_TE_DSILINK;
-  CmdCfg.TearingEffectPolarity = DSI_TE_FALLING_EDGE;
+  CmdCfg.TearingEffectPolarity = DSI_TE_RISING_EDGE;
   CmdCfg.HSPolarity            = DSI_HSYNC_ACTIVE_LOW;
   CmdCfg.VSPolarity            = DSI_VSYNC_ACTIVE_LOW;
   CmdCfg.DEPolarity            = DSI_DATA_ENABLE_ACTIVE_HIGH;
@@ -694,20 +673,19 @@ static uint8_t LCD_Config(void)
   }
 
   /* Disable the Tearing Effect interrupt activated by default on previous function */
-  __HAL_DSI_DISABLE_IT(&DsiHandle, DSI_IT_TE);
+  //__HAL_DSI_DISABLE_IT(&DsiHandle, DSI_IT_TE);
 
   /* Enable DSI */
   __HAL_DSI_ENABLE(&DsiHandle);
 
-  //HAL_DSI_EnterULPMData(&DsiHandle);
   if (LCD_OK != DisplayController_Config()) {
     return LCD_ERROR;
   }
 
-  //HAL_DSI_ExitULPMData(&DsiHandle);
-
   /* Enable DSI Wrapper */
   __HAL_DSI_WRAPPER_ENABLE(&DsiHandle);
+  HAL_NVIC_SetPriority(DSI_IRQn, 3, 0);
+  HAL_NVIC_EnableIRQ(DSI_IRQn);
 
   return LCD_OK;
 }
